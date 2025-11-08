@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete C Programming Visual Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0c0c0c, #1a1a1a);
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2d2d30;
+            padding: 10px 20px;
+            border-bottom: 2px solid #007acc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 50px;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            color: #007acc;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #005a9e;
+            transform: translateY(-1px);
+        }
+
+        .btn.success {
+            background: #28a745;
+        }
+
+        .btn.success:hover {
+            background: #218838;
+        }
+
+        .btn.danger {
+            background: #dc3545;
+        }
+
+        .btn.danger:hover {
+            background: #c82333;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 50px);
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #252526;
+            border-right: 1px solid #3e3e42;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            color: #cccccc;
+            margin: 15px 0 8px 0;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #3e3e42;
+            padding-bottom: 5px;
+        }
+
+        .sidebar h3:first-child {
+            margin-top: 0;
+        }
+
+        .draggable-snippet {
+            background: linear-gradient(135deg, #007acc, #005a9e);
+            color: white;
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 5px;
+            cursor: grab;
+            border: none;
+            width: 100%;
+            text-align: left;
+            font-size: 11px;
+            transition: all 0.2s ease;
+            user-select: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .draggable-snippet:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 122, 204, 0.3);
+        }
+
+        .draggable-snippet:active {
+            cursor: grabbing;
+        }
+
+        .draggable-snippet.control { background: linear-gradient(135deg, #ff6b35, #f7931e); }
+        .draggable-snippet.io { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
+        .draggable-snippet.variable { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .draggable-snippet.operator { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .draggable-snippet.function { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .draggable-snippet.structure { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .draggable-snippet.memory { background: linear-gradient(135deg, #e67e22, #d35400); }
+        .draggable-snippet.file { background: linear-gradient(135deg, #27ae60, #229954); }
+
+        .snippet-icon {
+            font-size: 12px;
+            margin-right: 6px;
+        }
+
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .code-workspace {
+            flex: 1;
+            background: #1e1e1e;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            padding: 20px;
+            border: none;
+            outline: none;
+            resize: none;
+            color: #ffffff;
+            line-height: 1.6;
+            overflow: auto;
+        }
+
+        .code-workspace::placeholder {
+            color: #6c6c6c;
+        }
+
+        .output-area {
+            height: 200px;
+            background: #0d1117;
+            border-top: 1px solid #3e3e42;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .output-header {
+            background: #21262d;
+            padding: 8px 15px;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .output-header h4 {
+            color: #007acc;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .output-content {
+            flex: 1;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #cccccc;
+            overflow: auto;
+            white-space: pre-wrap;
+        }
+
+        .run-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .run-btn:hover {
+            background: linear-gradient(135deg, #218838, #1ea085);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .status-bar {
+            background: #007acc;
+            color: white;
+            padding: 4px 15px;
+            font-size: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .error {
+            color: #ff6b6b;
+        }
+
+        .success {
+            color: #51cf66;
+        }
+
+        .code-workspace {
+            background: linear-gradient(to right, #1e1e1e 0%, #1e1e1e 100%);
+            background-image: 
+                linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .drag-over {
+            background: rgba(0, 122, 204, 0.1);
+            border: 2px dashed #007acc;
+        }
+
+        /* Cursor position indicator */
+        .cursor-indicator {
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background: #007acc;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .cursor-indicator.show {
+            opacity: 1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .output-content.new-output {
+            animation: fadeIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔧 Complete C Programming Visual Editor</h1>
+        <div class="header-buttons">
+            <button class="btn" onclick="saveCode()">💾 Save</button>
+            <button class="btn" onclick="loadCode()">📂 Load</button>
+            <button class="btn success run-btn" onclick="runCode()">
+                <span>▶️</span> Run Code
+            </button>
+            <button class="btn danger" onclick="clearCode()">🗑️ Clear</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <h3>📋 Basic Structure</h3>
+            <div class="draggable-snippet" data-code="#include <stdio.h>">
+                <span class="snippet-icon">📚</span>Include stdio
+            </div>
+            <div class="draggable-snippet" data-code="#include <stdlib.h>">
+                <span class="snippet-icon">📚</span>Include stdlib
+            </div>
+            <div class="draggable-snippet" data-code="#include <string.h>">
+                <span class="snippet-icon">📚</span>Include string
+            </div>
+            <div class="draggable-snippet" data-code="#include <math.h>">
+                <span class="snippet-icon">📚</span>Include math
+            </div>
+            <div class="draggable-snippet" data-code="#include <ctype.h>">
+                <span class="snippet-icon">📚</span>Include ctype
+            </div>
+            <div class="draggable-snippet" data-code="#define CONSTANT_NAME value">
+                <span class="snippet-icon">🔗</span>Define constant
+            </div>
+            <div class="draggable-snippet" data-code="int main() {\n    \n    return 0;\n}">
+                <span class="snippet-icon">🏠</span>Main function
+            </div>
+
+            <h3>📊 Data Types & Variables</h3>
+            <div class="draggable-snippet variable" data-code="int variable_name = 0;">
+                <span class="snippet-icon">🔢</span>Integer
+            </div>
+            <div class="draggable-snippet variable" data-code="float variable_name = 0.0f;">
+                <span class="snippet-icon">🔢</span>Float
+            </div>
+            <div class="draggable-snippet variable" data-code="double variable_name = 0.0;">
+                <span class="snippet-icon">🔢</span>Double
+            </div>
+            <div class="draggable-snippet variable" data-code="char variable_name = 'a';">
+                <span class="snippet-icon">🔤</span>Character
+            </div>
+            <div class="draggable-snippet variable" data-code="char string_name[50];">
+                <span class="snippet-icon">📝</span>String/Char Array
+            </div>
+            <div class="draggable-snippet variable" data-code="int array_name[10];">
+                <span class="snippet-icon">📋</span>Integer Array
+            </div>
+            <div class="draggable-snippet variable" data-code="int matrix[3][3];">
+                <span class="snippet-icon">🗄️</span>2D Array
+            </div>
+            <div class="draggable-snippet variable" data-code="const int CONSTANT = 10;">
+                <span class="snippet-icon">🔒</span>Constant
+            </div>
+            <div class="draggable-snippet variable" data-code="static int static_var = 0;">
+                <span class="snippet-icon">📌</span>Static Variable
+            </div>
+
+            <h3>👉 Pointers</h3>
+            <div class="draggable-snippet memory" data-code="int *pointer_name;">
+                <span class="snippet-icon">👉</span>Integer Pointer
+            </div>
+            <div class="draggable-snippet memory" data-code="char *string_pointer;">
+                <span class="snippet-icon">👉</span>String Pointer
+            </div>
+            <div class="draggable-snippet memory" data-code="pointer_name = &variable;">
+                <span class="snippet-icon">🎯</span>Address Assignment
+            </div>
+            <div class="draggable-snippet memory" data-code="*pointer_name = value;">
+                <span class="snippet-icon">📦</span>Dereference
+            </div>
+            <div class="draggable-snippet memory" data-code="int **double_pointer;">
+                <span class="snippet-icon">👉👉</span>Double Pointer
+            </div>
+
+            <h3>💬 Input/Output</h3>
+            <div class="draggable-snippet io" data-code='printf("Hello World\\n");'>
+                <span class="snippet-icon">📺</span>Print String
+            </div>
+            <div class="draggable-snippet io" data-code='printf("%d\\n", variable);'>
+                <span class="snippet-icon">📺</span>Print Integer
+            </div>
+            <div class="draggable-snippet io" data-code='printf("%f\\n", variable);'>
+                <span class="snippet-icon">📺</span>Print Float
+            </div>
+            <div class="draggable-snippet io" data-code='printf("%c\\n", variable);'>
+                <span class="snippet-icon">📺</span>Print Character
+            </div>
+            <div class="draggable-snippet io" data-code='printf("%s\\n", string);'>
+                <span class="snippet-icon">📺</span>Print String Var
+            </div>
+            <div class="draggable-snippet io" data-code='scanf("%d", &variable);'>
+                <span class="snippet-icon">⌨️</span>Read Integer
+            </div>
+            <div class="draggable-snippet io" data-code='scanf("%f", &variable);'>
+                <span class="snippet-icon">⌨️</span>Read Float
+            </div>
+            <div class="draggable-snippet io" data-code='scanf("%c", &variable);'>
+                <span class="snippet-icon">⌨️</span>Read Character
+            </div>
+            <div class="draggable-snippet io" data-code='scanf("%s", string);'>
+                <span class="snippet-icon">⌨️</span>Read String
+            </div>
+            <div class="draggable-snippet io" data-code='gets(string);'>
+                <span class="snippet-icon">📝</span>Read Line
+            </div>
+            <div class="draggable-snippet io" data-code='puts(string);'>
+                <span class="snippet-icon">📺</span>Print Line
+            </div>
+            <div class="draggable-snippet io" data-code='getchar();'>
+                <span class="snippet-icon">🔤</span>Get Character
+            </div>
+            <div class="draggable-snippet io" data-code='putchar(character);'>
+                <span class="snippet-icon">🔤</span>Put Character
+            </div>
+
+            <h3>🔀 Control Flow</h3>
+            <div class="draggable-snippet control" data-code="if (condition) {\n    // code here\n}">
+                <span class="snippet-icon">❓</span>If Statement
+            </div>
+            <div class="draggable-snippet control" data-code="if (condition) {\n    // if true\n} else {\n    // if false\n}">
+                <span class="snippet-icon">⚖️</span>If-Else
+            </div>
+            <div class="draggable-snippet control" data-code="if (condition1) {\n    // code\n} else if (condition2) {\n    // code\n} else {\n    // code\n}">
+                <span class="snippet-icon">🔗</span>If-Else If
+            </div>
+            <div class="draggable-snippet control" data-code="for (int i = 0; i < 10; i++) {\n    // loop body\n}">
+                <span class="snippet-icon">🔄</span>For Loop
+            </div>
+            <div class="draggable-snippet control" data-code="while (condition) {\n    // loop body\n}">
+                <span class="snippet-icon">🔁</span>While Loop
+            </div>
+            <div class="draggable-snippet control" data-code="do {\n    // loop body\n} while (condition);">
+                <span class="snippet-icon">🔄</span>Do-While Loop
+            </div>
+            <div class="draggable-snippet control" data-code="switch (variable) {\n    case 1:\n        // code\n        break;\n    case 2:\n        // code\n        break;\n    default:\n        // code\n        break;\n}">
+                <span class="snippet-icon">🔀</span>Switch Statement
+            </div>
+            <div class="draggable-snippet control" data-code="break;">
+                <span class="snippet-icon">🛑</span>Break
+            </div>
+            <div class="draggable-snippet control" data-code="continue;">
+                <span class="snippet-icon">⏭️</span>Continue
+            </div>
+            <div class="draggable-snippet control" data-code="return value;">
+                <span class="snippet-icon">↩️</span>Return
+            </div>
+            <div class="draggable-snippet control" data-code="goto label;">
+                <span class="snippet-icon">🏷️</span>Goto
+            </div>
+
+            <h3>➕ Arithmetic Operators</h3>
+            <div class="draggable-snippet operator" data-code="result = a + b;">
+                <span class="snippet-icon">➕</span>Addition
+            </div>
+            <div class="draggable-snippet operator" data-code="result = a - b;">
+                <span class="snippet-icon">➖</span>Subtraction
+            </div>
+            <div class="draggable-snippet operator" data-code="result = a * b;">
+                <span class="snippet-icon">✖️</span>Multiplication
+            </div>
+            <div class="draggable-snippet operator" data-code="result = a / b;">
+                <span class="snippet-icon">➗</span>Division
+            </div>
+            <div class="draggable-snippet operator" data-code="result = a % b;">
+                <span class="snippet-icon">🔢</span>Modulo
+            </div>
+            <div class="draggable-snippet operator" data-code="variable++;">
+                <span class="snippet-icon">⬆️</span>Increment
+            </div>
+            <div class="draggable-snippet operator" data-code="variable--;">
+                <span class="snippet-icon">⬇️</span>Decrement
+            </div>
+
+            <h3>🔄 Assignment Operators</h3>
+            <div class="draggable-snippet operator" data-code="variable = value;">
+                <span class="snippet-icon">=</span>Assignment
+            </div>
+            <div class="draggable-snippet operator" data-code="variable += value;">
+                <span class="snippet-icon">➕=</span>Add Assign
+            </div>
+            <div class="draggable-snippet operator" data-code="variable -= value;">
+                <span class="snippet-icon">➖=</span>Sub Assign
+            </div>
+            <div class="draggable-snippet operator" data-code="variable *= value;">
+                <span class="snippet-icon">✖️=</span>Mult Assign
+            </div>
+            <div class="draggable-snippet operator" data-code="variable /= value;">
+                <span class="snippet-icon">➗=</span>Div Assign
+            </div>
+            <div class="draggable-snippet operator" data-code="variable %= value;">
+                <span class="snippet-icon">🔢=</span>Mod Assign
+            </div>
+
+            <h3>⚖️ Comparison Operators</h3>
+            <div class="draggable-snippet operator" data-code="if (a == b) {\n    // equal\n}">
+                <span class="snippet-icon">==</span>Equal To
+            </div>
+            <div class="draggable-snippet operator" data-code="if (a != b) {\n    // not equal\n}">
+                <span class="snippet-icon">!=</span>Not Equal
+            </div>
+            <div class="draggable-snippet operator" data-code="if (a < b) {\n    // less than\n}">
+                <span class="snippet-icon"><</span>Less Than
+            </div>
+            <div class="draggable-snippet operator" data-code="if (a > b) {\n    // greater than\n}">
+                <span class="snippet-icon">></span>Greater Than
+            </div>
+            <div class="draggable-snippet operator" data-code="if (a <= b) {\n    // less or equal\n}">
+                <span class="snippet-icon">≤</span>Less Equal
+            </div>
+            <div class="draggable-snippet operator" data-code="if (a >= b) {\n    // greater or equal\n}">
+                <span class="snippet-icon">≥</span>Greater Equal
+            </div>
+
+            <h3>🔗 Logical Operators</h3>
+            <div class="draggable-snippet operator" data-code="if (condition1 && condition2) {\n    // both true\n}">
+                <span class="snippet-icon">&&</span>Logical AND
+            </div>
+            <div class="draggable-snippet operator" data-code="if (condition1 || condition2) {\n    // either true\n}">
+                <span class="snippet-icon">||</span>Logical OR
+            </div>
+            <div class="draggable-snippet operator" data-code="if (!condition) {\n    // not true\n}">
+                <span class="snippet-icon">!</span>Logical NOT
+            </div>
+
+            <h3>🔢 Bitwise Operators</h3>
+            <div class="draggable-snippet operator" data-code="result = a & b;">
+                <span class="snippet-icon">&</span>Bitwise AND
+            </div>
+            <div class="draggable-snippet operator" data-code="result = a | b;">
+                <span class="snippet-icon">|</span>Bitwise OR
+            </div>
+            <div class="draggable-snippet operator" data-code="result = a ^ b;">
+                <span class="snippet-icon">^</span>Bitwise XOR
+            </div>
+            <div class="draggable-snippet operator" data-code="result = ~a;">
+                <span class="snippet-icon">~</span>Bitwise NOT
+            </div>
+            <div class="draggable-snippet operator" data-code="result = a << 2;">
+                <span class="snippet-icon"><<</span>Left Shift
+            </div>
+            <div class="draggable-snippet operator" data-code="result = a >> 2;">
+                <span class="snippet-icon">>></span>Right Shift
+            </div>
+
+            <h3>⚙️ Functions</h3>
+            <div class="draggable-snippet function" data-code="void functionName() {\n    // function body\n}">
+                <span class="snippet-icon">⚙️</span>Void Function
+            </div>
+            <div class="draggable-snippet function" data-code="int functionName() {\n    // function body\n    return 0;\n}">
+                <span class="snippet-icon">⚙️</span>Int Function
+            </div>
+            <div class="draggable-snippet function" data-code="int functionName(int param1, int param2) {\n    // function body\n    return result;\n}">
+                <span class="snippet-icon">⚙️</span>Function with Params
+            </div>
+            <div class="draggable-snippet function" data-code="functionName();">
+                <span class="snippet-icon">📞</span>Call Function
+            </div>
+            <div class="draggable-snippet function" data-code="result = functionName(arg1, arg2);">
+                <span class="snippet-icon">📞</span>Call with Args
+            </div>
+
+            <h3>🏗️ Structures</h3>
+            <div class="draggable-snippet structure" data-code="struct StructName {\n    int member1;\n    char member2;\n};"><span class="snippet-icon">🏗️</span>Struct Definition
+            </div>
+            <div class="draggable-snippet structure" data-code="struct StructName variable;"><span class="snippet-icon">📦</span>Struct Variable
+            </div>
+            <div class="draggable-snippet structure" data-code="variable.member = value;"><span class="snippet-icon">🔗</span>Access Member
+            </div>
+            <div class="draggable-snippet structure" data-code="pointer->member = value;"><span class="snippet-icon">👉</span>Pointer Access
+            </div>
+            <div class="draggable-snippet structure" data-code="typedef struct {\n    int member1;\n    char member2;\n} TypeName;"><span class="snippet-icon">🏷️</span>Typedef Struct
+            </div>
+            <div class="draggable-snippet structure" data-code="union UnionName {\n    int intVar;\n    float floatVar;\n};"><span class="snippet-icon">🔀</span>Union
+            </div>
+            <div class="draggable-snippet structure" data-code="enum Color {RED, GREEN, BLUE};"><span class="snippet-icon">🎨</span>Enum
+            </div>
+
+            <h3>💾 Memory Management</h3>
+            <div class="draggable-snippet memory" data-code="malloc(size * sizeof(type));">
+                <span class="snippet-icon">🆕</span>Malloc
+            </div>
+            <div class="draggable-snippet memory" data-code="calloc(count, sizeof(type));">
+                <span class="snippet-icon">🆕</span>Calloc
+            </div>
+            <div class="draggable-snippet memory" data-code="realloc(pointer, new_size);">
+                <span class="snippet-icon">🔄</span>Realloc
+            </div>
+            <div class="draggable-snippet memory" data-code="free(pointer);">
+                <span class="snippet-icon">🗑️</span>Free
+            </div>
+            <div class="draggable-snippet memory" data-code="sizeof(variable);">
+                <span class="snippet-icon">📏</span>Sizeof
+            </div>
+
+            <h3>📁 File Operations</h3>
+            <div class="draggable-snippet file" data-code='FILE *file = fopen("filename.txt", "r");'>
+                <span class="snippet-icon">📂</span>Open File
+            </div>
+            <div class="draggable-snippet file" data-code="fclose(file);">
+                <span class="snippet-icon">📁</span>Close File
+            </div>
+            <div class="draggable-snippet file" data-code="fprintf(file, \"Hello\\n\");">
+                <span class="snippet-icon">✍️</span>Write to File
+            </div>
+            <div class="draggable-snippet file" data-code="fscanf(file, \"%d\", &variable);">
+                <span class="snippet-icon">📖</span>Read from File
+            </div>
+            <div class="draggable-snippet file" data-code="fgetc(file);">
+                <span class="snippet-icon">🔤</span>Get Character
+            </div>
+            <div class="draggable-snippet file" data-code="fputc(character, file);">
+                <span class="snippet-icon">🔤</span>Put Character
+            </div>
+            <div class="draggable-snippet file" data-code="fgets(string, size, file);">
+                <span class="snippet-icon">📝</span>Get String
+            </div>
+            <div class="draggable-snippet file" data-code="fputs(string, file);">
+                <span class="snippet-icon">📝</span>Put String
+            </div>
+
+            <h3>📝 String Functions</h3>
+            <div class="draggable-snippet" data-code="strlen(string);">
+                <span class="snippet-icon">📏</span>String Length
+            </div>
+            <div class="draggable-snippet" data-code="strcpy(dest, source);">
+                <span class="snippet-icon">📋</span>String Copy
+            </div>
+            <div class="draggable-snippet" data-code="strcat(dest, source);">
+                <span class="snippet-icon">➕</span>String Concat
+            </div>
+            <div class="draggable-snippet" data-code="strcmp(str1, str2);">
+                <span class="snippet-icon">⚖️</span>String Compare
+            </div>
+            <div class="draggable-snippet" data-code="strchr(string, character);">
+                <span class="snippet-icon">🔍</span>Find Character
+            </div>
+            <div class="draggable-snippet" data-code="strstr(string, substring);">
+                <span class="snippet-icon">🔍</span>Find Substring
+            </div>
+
+            <h3>🧮 Math Functions</h3>
+            <div class="draggable-snippet" data-code="sqrt(number);">
+                <span class="snippet-icon">√</span>Square Root
+            </div>
+            <div class="draggable-snippet" data-code="pow(base, exponent);">
+                <span class="snippet-icon">^</span>Power
+            </div>
+            <div class="draggable-snippet" data-code="abs(number);">
+                <span class="snippet-icon">|x|</span>Absolute
+            </div>
+            <div class="draggable-snippet" data-code="sin(angle);">
+                <span class="snippet-icon">📐</span>Sine
+            </div>
+            <div class="draggable-snippet" data-code="cos(angle);">
+                <span class="snippet-icon">📐</span>Cosine
+            </div>
+            <div class="draggable-snippet" data-code="tan(angle);">
+                <span class="snippet-icon">📐</span>Tangent
+            </div>
+            <div class="draggable-snippet" data-code="ceil(number);">
+                <span class="snippet-icon">⬆️</span>Ceiling
+            </div>
+            <div class="draggable-snippet" data-code="floor(number);">
+                <span class="snippet-icon">⬇️</span>Floor
+            </div>
+
+            <h3>🎲 Utility Functions</h3>
+            <div class="draggable-snippet" data-code="rand();">
+                <span class="snippet-icon">🎲</span>Random Number
+            </div>
+            <div class="draggable-snippet" data-code="srand(time(NULL));">
+                <span class="snippet-icon">🌱</span>Seed Random
+            </div>
+            <div class="draggable-snippet" data-code="exit(0);">
+                <span class="snippet-icon">🚪</span>Exit Program
+            </div>
+            <div class="draggable-snippet" data-code="system(\"command\");">
+                <span class="snippet-icon">💻</span>System Command
+            </div>
+        </div>
+
+        <div class="main-area">
+            <textarea 
+                class="code-workspace" 
+                id="codeEditor"
+                placeholder="// Welcome to Complete C Visual Editor!
+// Drag code snippets from the left sidebar directly here
+// Drop them exactly where you want them in your code
+
+#include <stdio.h>
+
+int main() {
+    printf(&quot;Hello World!\\n&quot;);
+    return 0;
+}"
+                spellcheck="false"
+            ></textarea>
+            <div class="cursor-indicator" id="cursorIndicator"></div>
+
+            <div class="output-area">
+                <div class="output-header">
+                    <h4>Program Output</h4>
+                    <button class="run-btn" onclick="runCode()">
+                        <span>▶️</span> Run Code
+                    </button>
+                </div>
+                <div class="output-content" id="output">
+                    Click "Run Code" to compile and execute your program...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <span>Complete C Language Support</span>
+        <span id="statusText">Drag snippets from sidebar to add code</span>
+    </div>
+
+    <script>
+        const codeEditor = document.getElementById('codeEditor');
+        const output = document.getElementById('output');
+        const cursorIndicator = document.getElementById('cursorIndicator');
+        let isRunning = false;
+        let dragDropPosition = 0;
+
+        // Initialize drag and drop
+        function initializeDragAndDrop() {
+            // Make snippets draggable
+            document.querySelectorAll('.draggable-snippet').forEach(snippet => {
+                snippet.addEventListener('dragstart', handleDragStart);
+                snippet.addEventListener('click', handleSnippetClick);
+                snippet.draggable = true;
+            });
+
+            // Make code editor droppable with precise positioning
+            codeEditor.addEventListener('dragover', handleDragOver);
+            codeEditor.addEventListener('drop', handleDrop);
+            codeEditor.addEventListener('dragleave', handleDragLeave);
+            codeEditor.addEventListener('mousemove', updateCursorPosition);
+        }
+
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.closest('.draggable-snippet').dataset.code);
+            updateStatus('Dragging code snippet...');
+        }
+
+        function handleSnippetClick(e) {
+            const code = e.target.closest('.draggable-snippet').dataset.code;
+            insertCodeAtCursor(code);
+            updateStatus('Code snippet added!');
+        }
+
+        function updateCursorPosition(e) {
+            if (e.target !== codeEditor) return;
+            
+            // Calculate text position from mouse coordinates
+            const rect = codeEditor.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Create temporary element to measure text position
+            const range = document.caretRangeFromPoint(x, y);
+            if (range) {
+                dragDropPosition = getTextPositionFromRange(range);
+            }
+        }
+
+        function getTextPositionFromRange(range) {
+            // For textarea, we need to calculate position differently
+            const textBeforeRange = codeEditor.value.substring(0, dragDropPosition);
+            const lines = textBeforeRange.split('\n');
+            const lineHeight = parseInt(getComputedStyle(codeEditor).lineHeight);
+            const charWidth = 8.4; // Approximate character width for monospace
+            
+            return dragDropPosition;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            codeEditor.classList.add('drag-over');
+            
+            // Calculate precise cursor position
+            const rect = codeEditor.getBoundingClientRect();
+            const x = e.clientX - rect.left - 20; // Account for padding
+            const y = e.clientY - rect.top - 20;
+            
+            // Estimate text position based on coordinates
+            const lineHeight = parseInt(getComputedStyle(codeEditor).lineHeight) || 22;
+            const charWidth = 8.4; // Monospace character width
+            
+            const lineNumber = Math.floor(y / lineHeight);
+            const charNumber = Math.floor(x / charWidth);
+            
+            // Calculate text position
+            const lines = codeEditor.value.split('\n');
+            let position = 0;
+            for (let i = 0; i < lineNumber && i < lines.length; i++) {
+                position += lines[i].length + 1; // +1 for newline
+            }
+            position += Math.min(charNumber, lines[lineNumber] ? lines[lineNumber].length : 0);
+            
+            dragDropPosition = Math.max(0, Math.min(position, codeEditor.value.length));
+            
+            // Show cursor indicator (visual feedback)
+            showCursorIndicator(x, y);
+        }
+
+        function showCursorIndicator(x, y) {
+            cursorIndicator.style.left = (codeEditor.offsetLeft + x) + 'px';
+            cursorIndicator.style.top = (codeEditor.offsetTop + y) + 'px';
+            cursorIndicator.classList.add('show');
+        }
+
+        function handleDragLeave(e) {
+            codeEditor.classList.remove('drag-over');
+            cursorIndicator.classList.remove('show');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            codeEditor.classList.remove('drag-over');
+            cursorIndicator.classList.remove('show');
+            
+            const code = e.dataTransfer.getData('text/plain');
+            insertCodeAtPosition(code, dragDropPosition);
+            updateStatus('Code snippet dropped at exact position!');
+        }
+
+        function insertCodeAtPosition(code, position) {
+            const text = codeEditor.value;
+            const beforeText = text.substring(0, position);
+            const afterText = text.substring(position);
+            
+            // Add proper spacing
+            let insertText = code;
+            if (position > 0 && text[position - 1] !== '\n' && !code.startsWith('\n')) {
+                insertText = '\n' + insertText;
+            }
+            if (position < text.length && text[position] !== '\n' && !code.endsWith('\n')) {
+                insertText = insertText + '\n';
+            }
+
+            codeEditor.value = beforeText + insertText + afterText;
+            
+            // Set cursor position after inserted code
+            const newPos = position + insertText.length;
+            codeEditor.selectionStart = newPos;
+            codeEditor.selectionEnd = newPos;
+            codeEditor.focus();
+        }
+
+        function insertCodeAtCursor(code) {
+            const start = codeEditor.selectionStart;
+            const end = codeEditor.selectionEnd;
+            const text = codeEditor.value;
+            
+            // Add proper spacing
+            let insertText = code;
+            if (start > 0 && text[start - 1] !== '\n' && !code.startsWith('\n')) {
+                insertText = '\n' + insertText;
+            }
+            if (end < text.length && text[end] !== '\n' && !code.endsWith('\n')) {
+                insertText = insertText + '\n';
+            }
+
+            codeEditor.value = text.substring(0, start) + insertText + text.substring(end);
+            
+            // Set cursor position after inserted code
+            const newPos = start + insertText.length;
+            codeEditor.selectionStart = newPos;
+            codeEditor.selectionEnd = newPos;
+            codeEditor.focus();
+        }
+
+        async function runCode() {
+            if (isRunning) return;
+
+            const code = codeEditor.value.trim();
+            if (!code) {
+                showOutput('No code to run!', 'error');
+                return;
+            }
+
+            isRunning = true;
+            showOutput('🚀 Opening Programiz C Compiler with your code...', 'info');
+            updateStatus('Preparing Programiz compiler...');
+
+            try {
+                // Copy code to clipboard first
+                await navigator.clipboard.writeText(code);
+                
+                // Open Programiz C Compiler
+                const compilerUrl = 'https://www.programiz.com/c-programming/online-compiler/';
+                const compilerWindow = window.open(compilerUrl, 'compiler_window', 'width=1400,height=900,scrollbars=yes,resizable=yes');
+                
+                if (compilerWindow) {
+                    showOutput(`✅ Programiz C Compiler opened successfully!
+
+🎯 SUPER SIMPLE STEPS:
+1. The Programiz compiler is now open in a new window
+2. Your code has been COPIED to your clipboard automatically
+3. In the Programiz window:
+   • Click in the code editor area
+   • Clear existing code (Ctrl+A, then Delete)
+   • Paste your code (Ctrl+V)
+   • Click the big "RUN" button
+
+🚀 Your code will compile and run instantly!
+
+✨ Why Programiz is awesome:
+• Clean, simple interface
+• Fast compilation
+• No registration needed
+• Great error messages
+• Perfect for learning
+
+📋 Your code is ready in clipboard:
+${code.substring(0, 150)}${code.length > 150 ? '...' : ''}
+
+🔔 Having trouble? Alternative compilers:
+• OnlineGDB: https://www.onlinegdb.com/online_c_compiler
+• Replit: https://replit.com/languages/c`, 'success');
+
+                    updateStatus('Code copied! Paste it in Programiz and click RUN');
+                    
+                    // Friendly reminder after a few seconds
+                    setTimeout(() => {
+                        if (!compilerWindow.closed) {
+                            showOutput(`🔔 Quick reminder: 
+1. Switch to the Programiz window
+2. Click in the code area  
+3. Select all and delete (Ctrl+A, Delete)
+4. Paste your code (Ctrl+V)
+5. Hit the "RUN" button
+
+Your code is ready to paste! 📋✨`, 'info');
+                        }
+                    }, 6000);
+                    
+                } else {
+                    // Popup blocked - provide clipboard method
+                    showOutput(`🚫 Popup was blocked, but no worries!
+
+📋 Your code has been COPIED to your clipboard.
+
+🎯 Just follow these easy steps:
+1. Open a new tab
+2. Go to: https://www.programiz.com/c-programming/online-compiler/
+3. Click in the code editor
+4. Clear the sample code (Ctrl+A, Delete)
+5. Paste your code (Ctrl+V)  
+6. Click "RUN" to compile and execute
+
+✨ Why choose Programiz?
+• Super clean interface
+• Lightning fast compilation
+• Excellent for beginners
+• Clear error messages
+• Mobile-friendly too!
+
+🔄 Other great options:
+• OnlineGDB: https://www.onlinegdb.com/online_c_compiler
+• Replit: https://replit.com/languages/c
+• Ideone: https://ideone.com/
+
+Your code is ready to paste! 🚀`, 'info');
+
+                    updateStatus('Code copied! Open Programiz manually and paste');
+                }
+
+            } catch (clipboardError) {
+                console.error('Clipboard error:', clipboardError);
+                
+                // Fallback: Download file and show manual instructions
+                downloadCode();
+                
+                const compilerUrl = 'https://www.programiz.com/c-programming/online-compiler/';
+                window.open(compilerUrl, '_blank');
+                
+                showOutput(`📁 Code downloaded as program file!
+
+🔧 Since clipboard access failed, choose your method:
+
+METHOD 1 - Copy manually:
+1. Select all your code in the editor above (Ctrl+A)
+2. Copy it (Ctrl+C) 
+3. Go to the Programiz window that just opened
+4. Paste and run (Ctrl+V, then click RUN)
+
+METHOD 2 - Type it in:
+1. Go to the Programiz compiler window
+2. Clear the sample code  
+3. Type or copy your code from above
+4. Click "RUN"
+
+🌟 Programiz Features:
+• Clean, beginner-friendly interface
+• Fast compilation and execution
+• Great error explanations
+• No account required
+• Works on mobile too!
+
+📁 Your code was also saved as 'my_program.c' file`, 'info');
+
+                updateStatus('Code downloaded - copy to Programiz manually');
+            }
+
+            isRunning = false;
+        }
+
+        function downloadCode() {
+            const code = codeEditor.value;
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'my_program.c';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function showOutput(text, type = 'info') {
+            output.className = 'output-content new-output';
+            output.textContent = text;
+            
+            if (type === 'error') {
+                output.style.color = '#ff6b6b';
+            } else if (type === 'success') {
+                output.style.color = '#51cf66';
+            } else {
+                output.style.color = '#cccccc';
+            }
+
+            setTimeout(() => output.classList.remove('new-output'), 300);
+        }
+
+        function saveCode() {
+            const code = codeEditor.value;
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'my_program.c';
+            a.click();
+            URL.revokeObjectURL(url);
+            updateStatus('Code saved!');
+        }
+
+        function loadCode() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.c,.txt';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        codeEditor.value = e.target.result;
+                        updateStatus('Code loaded!');
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        function clearCode() {
+            if (confirm('Clear all code? This cannot be undone.')) {
+                codeEditor.value = '#include <stdio.h>\n\nint main() {\n    \n    return 0;\n}';
+                output.textContent = 'Code cleared. Ready for new program...';
+                output.style.color = '#cccccc';
+                updateStatus('Code cleared');
+            }
+        }
+
+        function updateStatus(message) {
+            document.getElementById('statusText').textContent = message;
+            setTimeout(() => {
+                document.getElementById('statusText').textContent = 'Drag snippets exactly where you want them';
+            }, 3000);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 's':
+                        e.preventDefault();
+                        saveCode();
+                        break;
+                    case 'o':
+                        e.preventDefault();
+                        loadCode();
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        runCode();
+                        break;
+                }
+            }
+        });
+
+        // Auto-save to localStorage
+        let saveTimeout;
+        codeEditor.addEventListener('input', () => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                localStorage.setItem('c_editor_code', codeEditor.value);
+            }, 1000);
+        });
+
+        // Load auto-saved code
+        window.addEventListener('load', () => {
+            const savedCode = localStorage.getItem('c_editor_code');
+            if (savedCode && savedCode.trim() !== '') {
+                codeEditor.value = savedCode;
+            }
+            initializeDragAndDrop();
+            updateStatus('Complete C Editor ready! Drag snippets exactly where you want them.');
+        });
+    </script>
+</body>
+</html>
